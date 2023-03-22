@@ -1,8 +1,8 @@
+import random
+import time
 import matplotlib.pyplot as plt
 import networkx as nx
-import time
-import random
-from queue import Queue
+
 
 class Graph:
     def __init__(self):
@@ -24,9 +24,9 @@ class Graph:
         return self.adj_list[vertex]
 
     def draw(self):
-        G = nx.Graph(self.adj_list)
-        pos = nx.spring_layout(G)
-        nx.draw(G, pos, with_labels=True)
+        graph = nx.Graph(self.adj_list)
+        pos = nx.spring_layout(graph)
+        nx.draw(graph, pos, with_labels=True)
         plt.show()
 
     def generate_random_graph(self, n, p):
@@ -38,6 +38,7 @@ class Graph:
                     self.add_edge(i, j)
 
     def bfs(self, start_vertex):
+        output = []
         visited = {v: False for v in self.adj_list}
         queue = []
 
@@ -46,34 +47,51 @@ class Graph:
 
         while queue:
             s = queue.pop(0)
-            print(s, end=' ')
+            output.append(s)
 
             for neighbor in self.adj_list[s]:
                 if not visited[neighbor]:
                     visited[neighbor] = True
                     queue.append(neighbor)
+        return output
 
-def exec_time(function, n):
-    start_time = time.time()
-    function(n)
-    end_time = time.time()
-    return end_time - start_time
+    def dfs(self, start_vertex):
+        visited = set()
+        stack = [start_vertex]
+        output = []
 
-# create a new graph object
+        while stack:
+            v = stack.pop()
+            if v not in visited:
+                visited.add(v)
+                output.append(v)
+                for neighbour in self.adj_list[v]:
+                    stack.append(neighbour)
+
+        return output
+
+
+# Create a new graph object
 g = Graph()
+# Generate random graph
+v = 10000
+e = 0.3
+g.generate_random_graph(v, e)
 
-g.generate_random_graph(5, 0.33)
+# print(g.adj_list)
 
-# print the adjacency list
-print(g.adj_list)
+print("_____________________")
+x = random.randint(0, v)
+
+start_time = time.time()
+g.dfs(x)
+DFS_time = time.time() - start_time
+print("DFS time:", DFS_time)
+
+start_time = time.time()
+g.bfs(x)
+BFS_time = time.time() - start_time
+print("BFS time:", BFS_time)
 
 
-print(g.bfs(0))
-print(g.bfs(1))
-print(g.bfs(2))
-print(g.bfs(3))
-print(g.bfs(4))
-
-g.draw()
-
-
+# g.draw()
