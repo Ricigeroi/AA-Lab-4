@@ -73,25 +73,41 @@ class Graph:
 
 # Create a new graph object
 g = Graph()
+
 # Generate random graph
-v = 10000
-e = 0.3
-g.generate_random_graph(v, e)
+v = []
+for i in range(1000, 10000, 1000):
+    v.append(i)
+e = 0.9
 
-# print(g.adj_list)
+DFS_timing = []
+BFS_timing = []
 
-print("_____________________")
-x = random.randint(0, v)
+for i in v:
+    g.generate_random_graph(i, e)
+    x = random.randint(0, i)
+    start_time = time.time()
+    g.dfs(x)
+    DFS_time = time.time() - start_time
 
-start_time = time.time()
-g.dfs(x)
-DFS_time = time.time() - start_time
-print("DFS time:", DFS_time)
+    start_time = time.time()
+    g.bfs(x)
+    BFS_time = time.time() - start_time
 
-start_time = time.time()
-g.bfs(x)
-BFS_time = time.time() - start_time
-print("BFS time:", BFS_time)
+    DFS_timing.append(DFS_time)
+    BFS_timing.append(BFS_time)
+
+print(v)
+print(DFS_timing)
+print(BFS_timing)
 
 
-# g.draw()
+fig1 = plt.figure()
+plt.grid()
+plt.plot(v, DFS_timing, linewidth=2)
+plt.plot(v, BFS_timing, linewidth=2)
+plt.legend(['DFS', 'BFS'])
+plt.title('Empirical analysis of DFS and BFS algorithms with edge density =' + str(e))
+plt.xlabel('Number of vertices')
+plt.ylabel('Execution time, sec')
+plt.show()
