@@ -1,113 +1,135 @@
+import graphviz
+from queue import Queue
 import random
 import time
 import matplotlib.pyplot as plt
-import networkx as nx
+
+class TreeNode:
+    def __init__(self, val):
+        self.val = val
+        self.left = None
+        self.right = None
 
 
-class Graph:
-    def __init__(self):
-        self.adj_list = {}
-
-    def add_vertex(self, vertex):
-        if vertex not in self.adj_list:
-            self.adj_list[vertex] = []
-
-    def add_edge(self, v1, v2):
-        if v1 not in self.adj_list:
-            self.add_vertex(v1)
-        if v2 not in self.adj_list:
-            self.add_vertex(v2)
-        self.adj_list[v1].append(v2)
-        self.adj_list[v2].append(v1)
-
-    def get_neighbors(self, vertex):
-        return self.adj_list[vertex]
-
-    def draw(self):
-        graph = nx.Graph(self.adj_list)
-        pos = nx.spring_layout(graph)
-        nx.draw(graph, pos, with_labels=True)
-        plt.show()
-
-    def generate_random_graph(self, n, p):
-        for i in range(n):
-            self.add_vertex(i)
-        for i in range(n):
-            for j in range(i + 1, n):
-                if random.random() < p:
-                    self.add_edge(i, j)
-
-    def bfs(self, start_vertex):
-        output = []
-        visited = {v: False for v in self.adj_list}
-        queue = []
-
-        visited[start_vertex] = True
-        queue.append(start_vertex)
-
-        while queue:
-            s = queue.pop(0)
-            output.append(s)
-
-            for neighbor in self.adj_list[s]:
-                if not visited[neighbor]:
-                    visited[neighbor] = True
-                    queue.append(neighbor)
-        return output
-
-    def dfs(self, start_vertex):
-        visited = set()
-        stack = [start_vertex]
-        output = []
-
-        while stack:
-            v = stack.pop()
-            if v not in visited:
-                visited.add(v)
-                output.append(v)
-                for neighbour in self.adj_list[v]:
-                    stack.append(neighbour)
-
-        return output
+def build_balanced_bst(arr, start, end):
+    if start > end:
+        return None
+    mid = (start + end) // 2
+    root = TreeNode(arr[mid])
+    root.left = build_balanced_bst(arr, start, mid - 1)
+    root.right = build_balanced_bst(arr, mid + 1, end)
+    return root
 
 
-# Create a new graph object
-g = Graph()
+def visualize_tree(root):
+    g = graphviz.Digraph(format='png')
 
-# Generate random graph
-v = []
-for i in range(1000, 10000, 1000):
-    v.append(i)
-e = 0.9
-
-DFS_timing = []
-BFS_timing = []
-
-for i in v:
-    g.generate_random_graph(i, e)
-    x = random.randint(0, i)
-    start_time = time.time()
-    g.dfs(x)
-    DFS_time = time.time() - start_time
-
-    start_time = time.time()
-    g.bfs(x)
-    BFS_time = time.time() - start_time
-
-    DFS_timing.append(DFS_time)
-    BFS_timing.append(BFS_time)
-
-print(v)
-print(DFS_timing)
-print(BFS_timing)
+    def dfs(node, parent=None):
+        if node:
+            # If the node value is in the target list, add a different style to it
+            if node.val in target:
+                g.node(str(node.val), style='filled', fillcolor='lightblue')
+            else:
+                g.node(str(node.val))
+            if parent:
+                g.edge(str(parent.val), str(node.val))
+            dfs(node.left, node)
+            dfs(node.right, node)
 
 
-fig1 = plt.figure()
-plt.grid()
-plt.plot(v, DFS_timing, linewidth=2)
-plt.plot(v, BFS_timing, linewidth=2)
-plt.legend(['DFS', 'BFS'])
-plt.title('Empirical analysis of DFS and BFS algorithms with edge density =' + str(e))
-plt.xlabel('Number of vertices')
-plt.ylabel('Execution time, sec')
+    dfs(root)
+    return g
+
+
+def find_element_dfs(root, target):
+    stack = [root]
+    path = []
+    while stack:
+        node = stack.pop()
+        path.append(node.val)
+        if node.val == target:
+            return node, path
+        if node.right:
+            stack.append(node.right)
+        if node.left:
+            stack.append(node.left)
+    return None, path
+
+def find_element_bfs(root, target):
+    queue = [root]
+    path = []
+    while queue:
+        node = queue.pop(0)
+        path.append(node.val)
+        if node.val == target:
+            return node, path
+        if node.left:
+            queue.append(node.left)
+        if node.right:
+            queue.append(node.right)
+    return None, path
+
+
+# Size of the three
+n = 31
+# Build the tree
+arr = list(range(n))
+random.shuffle(arr)
+root = build_balanced_bst(arr, 0, len(arr) - 1)
+
+DFS_time = 0
+BFS_time = 0
+
+repeat = 50
+for j in range(1, repeat + 1):
+    target = arr.copy()
+    random.shuffle(target)
+    target = target[:5]
+
+    for i in range(5):
+        if j == repeat:
+            print(f"Target = {target[i]}")
+        # Search for the element 8 using DFS
+        start_time = time.time()
+        time.sleep(0.25)
+        node, path = find_element_dfs(root, target[i])
+        end_time = time.time() - 0.25
+        DFS_time += (end_time - start_time)
+        if j == repeat:
+            print("Full traversal path of DFS:", path)
+
+        # Search for the element using BFS
+        start_time = time.time()
+        time.sleep(0.25)
+        node, path = find_element_bfs(root, target[i])
+        end_time = time.time() - 0.25
+        BFS_time += (end_time - start_time)
+        if j == repeat:
+            print("Full traversal path of BFS:", path)
+
+        if j == repeat:
+            print("=====================================")
+
+print(f"DFS time: {DFS_time/repeat}")
+print(f"BFS time: {BFS_time/repeat}")
+
+# Visualize the tree
+tree_graph = visualize_tree(root)
+tree_graph.render('balanced_bst')
+
+
+# Create a bar chart
+fig, ax = plt.subplots()
+bar_width = 0.35
+opacity = 0.8
+rects1 = ax.bar('DFS', DFS_time/repeat, bar_width, alpha=opacity, color='b', label='DFS')
+rects2 = ax.bar('BFS', BFS_time/repeat, bar_width, alpha=opacity, color='g', label='BFS')
+
+# Add labels, title, and legend
+ax.set_xlabel('Search Algorithm')
+ax.set_ylabel('Time (seconds)')
+ax.set_title('Time Comparison of DFS and BFS')
+ax.legend()
+
+# Show the graph
 plt.show()
